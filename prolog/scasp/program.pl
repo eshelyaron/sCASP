@@ -255,7 +255,16 @@ sort_by_type([clause(_Ref, X)|T], R, D, _, Co) :-
     query(C, Q, _, N),
     !,
     sort_by_type(T, R, D, C, Co).
-sort_by_type([:-(Directive)|T], R, [Directive|D], C, Co) :-
+sort_by_type([source(Path, Pos, VarNames, X)|T], [source(Path, Pos, VarNames, X)|R], D, Ci, Co) :-
+    c_rule(X, _, _),
+    !,
+    sort_by_type(T, R, D, Ci, Co).
+sort_by_type([source(_, _, _, X)|T], R, D, _, Co) :-
+    X = c(N, Q),
+    query(C, Q, _, N),
+    !,
+    sort_by_type(T, R, D, C, Co).
+sort_by_type([source(_, _, _, (:-(Directive)))|T], R, [Directive|D], C, Co) :-
     !,
     sort_by_type(T, R, D, C, Co).
 sort_by_type([], [], [], C, C).
@@ -286,6 +295,9 @@ rules_predicates(Rules, Preds) :-
     list_to_set(Preds1, Preds).
 
 rule_predicates(clause(_Ref, R), Preds) :-
+    !,
+    rule_predicates(R, Preds).
+rule_predicates(source(_, _, _, R), Preds) :-
     !,
     rule_predicates(R, Preds).
 rule_predicates(R, Preds) :-
@@ -354,6 +366,7 @@ assert_rule_(Rule, Origin) :-
     assertz(defined_rule(H, H2, B, Origin)).
 
 rule_origin(clause(Ref, Rule), clause(Ref), Rule).
+rule_origin(source(Path, Pos, VarNames, Rule), source(Path, Pos, VarNames), Rule).
 rule_origin(neg(Rule), generated(neg), Rule).
 rule_origin(nmr(Rule), generated(nmr), Rule).
 rule_origin(dual(Rule), generated(dual), Rule).
